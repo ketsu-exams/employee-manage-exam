@@ -15,7 +15,7 @@ var productId, productURI, userName, orderURI, orderId;
 
 describe("Test", function () {
   this.timeout(60000);
-  it("POST /products -> 201", function(done) {
+  step("POST /products -> 201", function(done) {
     var options = {
       url: endpoint + '/products',
       method: 'POST',
@@ -53,7 +53,7 @@ describe("Test", function () {
   });
 
 
-  it("GET /products/{productId} -> 200", function(done) {
+  step("GET /products/{productId} -> 200", function(done) {
     var options = {
       url: endpoint + '/products/' + productId,
       method: 'GET',
@@ -109,7 +109,7 @@ describe("Test", function () {
       done();
     });
   });
-  it("GET /products -> 200", function (done) {
+  step("GET /products -> 200", function (done) {
     var options = {
       url: endpoint + '/products',
       method: 'GET',
@@ -169,7 +169,7 @@ describe("Test", function () {
     });
   });
 
-  it("POST /users -> 201", function(done) {
+  step("POST /users -> 201", function(done) {
     userName = 'scxu';
     var options = {
       url: endpoint + '/users',
@@ -201,7 +201,7 @@ describe("Test", function () {
     });
   });
   //
-  it("POST /users/{id}/orders -> 201", function(done) {
+  step("POST /users/{id}/orders -> 201", function(done) {
     var options = {
       url: endpoint + '/users/' + userName + '/orders',
       method: 'POST',
@@ -241,7 +241,7 @@ describe("Test", function () {
     });
   });
   //
-  it("GET /users/{id}/orders -> 200", function(done) {
+  step("GET /users/{id}/orders -> 200", function(done) {
     var options = {
       url: endpoint + '/users/' + userName + '/orders',
       method: 'GET',
@@ -302,7 +302,7 @@ describe("Test", function () {
     });
   });
 
-  it("GET /users/{id}/orders/{orderId} -> 200", function(done) {
+  step("GET /users/{id}/orders/{orderId} -> 200", function(done) {
     var options = {
       url: orderURI,
       method: 'GET',
@@ -390,7 +390,7 @@ describe("Test", function () {
     });
   });
   //
-  it("POST /users/{id}/orders/{orderId}/payment -> 201", function(done) {
+  step("POST /users/{id}/orders/{orderId}/payment -> 201", function(done) {
     var options = {
       url: orderURI + '/payment',
       method: 'POST',
@@ -422,7 +422,7 @@ describe("Test", function () {
     });
   });
 
-  it("GET /users/{id}/orders/{orderId}/payment -> 200", function(done) {
+  step("GET /users/{id}/orders/{orderId}/payment -> 200", function(done) {
     var options = {
       url: orderURI + '/payment',
       method: 'GET',
