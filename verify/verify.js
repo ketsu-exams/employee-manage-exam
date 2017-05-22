@@ -12,18 +12,20 @@ var endpoint = process.env.ENDPOINT;
 console.log(endpoint);
 
 var productId, productURI, userName, orderURI, orderId;
+var employeeId, employeeURI, departmentId, departmentURI, roleId, roleURI;
 
-describe("Test", function () {
+describe("Test", function() {
   this.timeout(60000);
-  step("POST /products -> 201", function(done) {
+  step("POST /employees -> 201", function(done) {
     var options = {
-      url: endpoint + '/products',
+      url: endpoint + '/employees',
       method: 'POST',
       qs: {},
       json: {
-        "name": "xxx",
-        "description": "xxx",
-        "price": 1.2
+        "name": "Jane Smith",
+        "department_id": 2,
+        "role_id": 3,
+        "gender": "male"
       },
       header: {}
     };
@@ -43,19 +45,18 @@ describe("Test", function () {
         var result = tv4.validateResult(json, schema);
         assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
         assert.ok(result.valid, "Got unexpected response body: " + result.error && result.error.message + " " + JSON.stringify(schema, null, 4) + " Error");
-        product
       }
-      productURI = response.headers['location'];
-      var splits = productURI.split("/");
-      productId = splits[splits.length - 1];
+      employeeURI = response.headers['location'];
+      var splits = employeeURI.split("/");
+      employeeId = splits[splits.length - 1];
       done();
     });
   });
 
 
-  step("GET /products/{productId} -> 200", function(done) {
+  step("GET /employees/{employeeId} -> 200", function(done) {
     var options = {
-      url: endpoint + '/products/' + productId,
+      url: endpoint + '/employees/' + employeeId,
       method: 'GET',
       qs: {},
       body: "",
@@ -70,28 +71,31 @@ describe("Test", function () {
         "$schema": "http://json-schema.org/draft-04/schema#",
         "type": "object",
         "properties": {
-          "uri": {
+          "employee_url": {
             "type": "string"
           },
           "id": {
-            "type": "string"
+            "type": "integer"
           },
           "name": {
             "type": "string"
           },
-          "description": {
-            "type": "string"
+          "department_id": {
+            "type": "integer"
           },
-          "price": {
-            "type": "number",
-            "minimum": 0
+          "role_id": {
+            "type": "integer"
+          },
+          "gender": {
+            "type": "string"
           },
           "required": [
             "id",
-            "uri",
+            "employee_url",
             "name",
-            "description",
-            "price"
+            "department_id",
+            "role_id",
+            "gender"
           ]
         }
       };
@@ -109,208 +113,16 @@ describe("Test", function () {
       done();
     });
   });
-  step("GET /products -> 200", function (done) {
+
+  step("GET /employees -> 200", function(done) {
     var options = {
-      url: endpoint + '/products',
+      url: endpoint + '/employees',
       method: 'GET',
       qs: {},
       body: '',
       header: {}
     };
 
-    request(options, function (error, response, body) {
-      assert.isNull(error);
-      assert.isNotNull(response, 'Response');
-      assert.equal(response.statusCode, 200, "Expect 200, got " + response.statusCode);
-      var schema = {
-        "$schema": "http://json-schema.org/draft-04/schema#",
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "uri": {
-              "type": "string"
-            },
-            "name": {
-              "type": "string"
-            },
-            "description": {
-              "type": "string"
-            },
-            "price": {
-              "type": "number",
-              "minimum": 0
-            },
-            "id": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "uri",
-            "id",
-            "name",
-            "description",
-            "price"
-          ]
-        }
-      };
-      if (schema != '') {
-        // verify response body
-        body = (body == '' ? '[empty]' : body);
-        assert.doesNotThrow(function () {
-          JSON.parse(body);
-        }, JSON.SyntaxError, "Invalid JSON: " + body);
-        var json = JSON.parse(body);
-        var result = tv4.validateResult(json, schema);
-        assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
-        assert.ok(result.valid, "Got unexpected response body: " + (result.error && result.error.message) + " " + JSON.stringify(schema, null, 4) + " Error");
-      }
-      done();
-    });
-  });
-
-  step("POST /users -> 201", function(done) {
-    userName = 'scxu';
-    var options = {
-      url: endpoint + '/users',
-      method: 'POST',
-      qs: {},
-      json: {
-        "name": userName
-      },
-      header: {}
-    };
-
-    request(options, function(error, response, body) {
-      assert.isNull(error);
-      assert.isNotNull(response, 'Response');
-      assert.equal(response.statusCode, 201, "Expect 201, got " + response.statusCode);
-      var schema = "";
-      if (schema != '') {
-        // verify response body
-        body = (body == '' ? '[empty]' : body);
-        assert.doesNotThrow(function() {
-          JSON.parse(body);
-        }, JSON.SyntaxError, "Invalid JSON: " + body);
-        var json = JSON.parse(body);
-        var result = tv4.validateResult(json, schema);
-        assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
-        assert.ok(result.valid, "Got unexpected response body: " + (result.error && result.error.message) + " " + JSON.stringify(schema, null, 4) + " Error");
-      }
-      done();
-    });
-  });
-  //
-  step("POST /users/{id}/orders -> 201", function(done) {
-    var options = {
-      url: endpoint + '/users/' + userName + '/orders',
-      method: 'POST',
-      qs: {},
-      json: {
-        "name": userName,
-        "address": "beijing",
-        "phone": "13200000000",
-        "order_items": [{
-          "product_id": productId,
-          "quantity": 2
-        }]
-      },
-      header: {}
-    };
-
-    request(options, function(error, response, body) {
-      assert.isNull(error);
-      assert.isNotNull(response, 'Response');
-      assert.equal(response.statusCode, 201, "Expect 201, got " + response.statusCode);
-      var schema = "";
-      if (schema != '') {
-        // verify response body
-        body = (body == '' ? '[empty]' : body);
-        assert.doesNotThrow(function() {
-          JSON.parse(body);
-        }, JSON.SyntaxError, "Invalid JSON: " + body);
-        var json = JSON.parse(body);
-        var result = tv4.validateResult(json, schema);
-        assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
-        assert.ok(result.valid, "Got unexpected response body: " + (result.error && result.error.message) + " " + JSON.stringify(schema, null, 4) + " Error");
-      }
-      orderURI = response.headers['location'];
-      orderId = orderURI.split("/")[orderURI.split("/").length - 1];
-      console.log(orderURI);
-      done();
-    });
-  });
-  //
-  step("GET /users/{id}/orders -> 200", function(done) {
-    var options = {
-      url: endpoint + '/users/' + userName + '/orders',
-      method: 'GET',
-      qs: {},
-      json: "",
-      header: {}
-    };
-
-    request(options, function(error, response, body) {
-      assert.isNull(error);
-      assert.isNotNull(response, 'Response');
-      assert.equal(response.statusCode, 200, "Expect 200, got " + response.statusCode);
-      var schema = {
-        "$schema": "http://json-schema.org/draft-04/schema#",
-        "type": "array",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "address": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string"
-          },
-          "created_at": {
-            "type": "integer"
-          },
-          "price": {
-            "type": "number",
-            "minimum": 0
-          },
-          "uri": {
-            "type": "string"
-          },
-          "required": [
-            "uri",
-            "name",
-            "address",
-            "phone",
-            "total_price",
-            "created_at"
-          ]
-        }
-      };
-      if (schema != '') {
-        // verify response body
-        body = (body == '' ? '[empty]' : body);
-        assert.doesNotThrow(function() {
-          JSON.parse(body);
-        }, JSON.SyntaxError, "Invalid JSON: " + body);
-        var json = JSON.parse(body);
-        var result = tv4.validateResult(json, schema);
-        assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
-        assert.ok(result.valid, "Got unexpected response body: " + (result.error && result.error.message) + " " + JSON.stringify(schema, null, 4) + " Error");
-      }
-      done();
-    });
-  });
-
-  step("GET /users/{id}/orders/{orderId} -> 200", function(done) {
-    var options = {
-      url: orderURI,
-      method: 'GET',
-      qs: {},
-      body: null,
-      header: {}
-    };
-
     request(options, function(error, response, body) {
       assert.isNull(error);
       assert.isNotNull(response, 'Response');
@@ -318,61 +130,39 @@ describe("Test", function () {
       var schema = {
         "$schema": "http://json-schema.org/draft-04/schema#",
         "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "uri": {
-            "type": "string"
-          },
-          "address": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string"
-          },
-          "total_price": {
-            "type": "number",
-            "minimum": 0
-          },
-          "created_at": {
-            "type": "integer"
-          },
-          "order_items": {
-            "type": "array",
-            "items": {
-              "properties": {
-                "uri": {
-                  "type": "string"
-                },
-                "product_id": {
-                  "type": "string"
-                },
-                "quantity": {
-                  "type": "number"
-                },
-                "amount": {
-                  "description": "price for single item",
-                  "type": "number"
-                }
-              },
-              "required": [
-                "uri",
-                "product_id",
-                "quantity",
-                "amount"
-              ]
-            }
-          },
-          "required": [
-            "name",
-            "address",
-            "phone",
-            "price",
-            "order_items",
-            "uri",
-            "created_at"
-          ]
+        "totalCount": {
+          "type": "integer"
+        },
+        "employees": {
+          "type": "object",
+          "properties": {
+            "employee_url": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            },
+            "department_id": {
+              "type": "integer"
+            },
+            "role_id": {
+              "type": "integer"
+            },
+            "gender": {
+              "type": "string"
+            },
+            "required": [
+              "id",
+              "employee_url",
+              "name",
+              "department_id",
+              "role_id",
+              "gender"
+            ]
+          }
         }
       };
       if (schema != '') {
@@ -389,15 +179,65 @@ describe("Test", function () {
       done();
     });
   });
-  //
-  step("POST /users/{id}/orders/{orderId}/payment -> 201", function(done) {
+
+  step("PUT /employees/{employeeId} -> 204", function(done) {
     var options = {
-      url: orderURI + '/payment',
+      url: endpoint + '/employees/' + employeeId,
+      method: 'PUT',
+      qs: {},
+      json: {
+        "name": "Jane Smith",
+        "department_id": 1,
+        "role_id": 2,
+        "gender": "male"
+      },
+      header: {}
+    };
+
+    request(options, function(error, response, body) {
+      assert.isNull(error);
+      assert.isNotNull(response, 'Response');
+      assert.equal(response.statusCode, 204, "Expect 204, got " + response.statusCode);
+      var schema = "";
+      if (schema != '') {
+        // verify response body
+        body = (body == '' ? '[empty]' : body);
+        assert.doesNotThrow(function() {
+          JSON.parse(body);
+        }, JSON.SyntaxError, "Invalid JSON: " + body);
+        var json = JSON.parse(body);
+        var result = tv4.validateResult(json, schema);
+        assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
+        assert.ok(result.valid, "Got unexpected response body: " + (result.error && result.error.message) + " " + JSON.stringify(schema, null, 4) + " Error");
+      }
+      done();
+    });
+  });
+
+  step("DELETE /employees/{employeeId} -> 204", function(done) {
+    var options = {
+      url: endpoint + '/employees/' + employeeId,
+      method: 'DELETE',
+      qs: {},
+      body: "",
+      header: {}
+    };
+
+    request(options, function(error, response, body) {
+      assert.isNull(error);
+      assert.isNotNull(response, 'Response');
+      assert.equal(response.statusCode, 204, "Expect 204, got " + response.statusCode);
+      done();
+    });
+  });
+
+  step("POST /departments -> 201", function(done) {
+    var options = {
+      url: endpoint + '/departments',
       method: 'POST',
       qs: {},
       json: {
-        "pay_type": "CASH",
-        "amount": 100
+        "name": "new_department"
       },
       header: {}
     };
@@ -418,13 +258,16 @@ describe("Test", function () {
         assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
         assert.ok(result.valid, "Got unexpected response body: " + (result.error && result.error.message) + " " + JSON.stringify(schema, null, 4) + " Error");
       }
+      departmentURI = response.headers['location'];
+      var splits = departmentURI.split("/");
+      departmentId = splits[splits.length - 1];
       done();
     });
   });
 
-  step("GET /users/{id}/orders/{orderId}/payment -> 200", function(done) {
+  step("GET /departments/{departmentId} -> 200", function(done) {
     var options = {
-      url: orderURI + '/payment',
+      url: endpoint + '/departments/' + departmentId,
       method: 'GET',
       qs: {},
       body: "",
@@ -439,34 +282,19 @@ describe("Test", function () {
         "$schema": "http://json-schema.org/draft-04/schema#",
         "type": "object",
         "properties": {
-          "order_uri": {
+          "department_url": {
             "type": "string"
           },
-          "uri": {
-            "type": "string"
-          },
-          "pay_type": {
-            "enum": [
-              "CASH",
-              "CREDIT_CARD"
-            ]
-          },
-          "amount": {
-            "type": "number"
-          },
-          "total_price": {
-            "type": "number",
-            "minimum": 0
-          },
-          "created_at": {
+          "id": {
             "type": "integer"
           },
+          "name": {
+            "type": "string"
+          },
           "required": [
-            "order_uri",
-            "uri",
-            "pay_type",
-            "amount",
-            "created_at"
+            "id",
+            "department_url",
+            "name"
           ]
         }
       };
@@ -485,4 +313,290 @@ describe("Test", function () {
     });
   });
 
+  step("GET /departments -> 200", function(done) {
+    var options = {
+      url: endpoint + '/departments',
+      method: 'GET',
+      qs: {},
+      body: '',
+      header: {}
+    };
+
+    request(options, function(error, response, body) {
+      assert.isNull(error);
+      assert.isNotNull(response, 'Response');
+      assert.equal(response.statusCode, 200, "Expect 200, got " + response.statusCode);
+      var schema = {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "totalCount": {
+          "type": "integer"
+        },
+        "departments": {
+          "type": "object",
+          "properties": {
+            "department_url": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            },
+            "required": [
+              "id",
+              "department_url",
+              "name"
+            ]
+          }
+        }
+      };
+      if (schema != '') {
+        // verify response body
+        body = (body == '' ? '[empty]' : body);
+        assert.doesNotThrow(function() {
+          JSON.parse(body);
+        }, JSON.SyntaxError, "Invalid JSON: " + body);
+        var json = JSON.parse(body);
+        var result = tv4.validateResult(json, schema);
+        assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
+        assert.ok(result.valid, "Got unexpected response body: " + (result.error && result.error.message) + " " + JSON.stringify(schema, null, 4) + " Error");
+      }
+      done();
+    });
+  });
+
+  step("PUT /departments/{deparmentId} -> 204", function(done) {
+    var options = {
+      url: endpoint + '/departments/' + departmentId,
+      method: 'PUT',
+      qs: {},
+      json: {
+        "name": "Life Department"
+      },
+      header: {}
+    };
+
+    request(options, function(error, response, body) {
+      assert.isNull(error);
+      assert.isNotNull(response, 'Response');
+      assert.equal(response.statusCode, 204, "Expect 204, got " + response.statusCode);
+      var schema = "";
+      if (schema != '') {
+        // verify response body
+        body = (body == '' ? '[empty]' : body);
+        assert.doesNotThrow(function() {
+          JSON.parse(body);
+        }, JSON.SyntaxError, "Invalid JSON: " + body);
+        var json = JSON.parse(body);
+        var result = tv4.validateResult(json, schema);
+        assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
+        assert.ok(result.valid, "Got unexpected response body: " + (result.error && result.error.message) + " " + JSON.stringify(schema, null, 4) + " Error");
+      }
+      done();
+    });
+  });
+
+  step("DELETE /departments/{departmentId} -> 204", function(done) {
+    var options = {
+      url: endpoint + '/departments/' + departmentId,
+      method: 'DELETE',
+      qs: {},
+      body: "",
+      header: {}
+    };
+
+    request(options, function(error, response, body) {
+      assert.isNull(error);
+      assert.isNotNull(response, 'Response');
+      assert.equal(response.statusCode, 204, "Expect 204, got " + response.statusCode);
+      done();
+    });
+  });
+
+
+  step("POST /roles -> 201", function(done) {
+    var options = {
+      url: endpoint + '/roles',
+      method: 'POST',
+      qs: {},
+      json: {
+        "title": "assistant manager"
+      },
+      header: {}
+    };
+
+    request(options, function(error, response, body) {
+      assert.isNull(error);
+      assert.isNotNull(response, 'Response');
+      assert.equal(response.statusCode, 201, "Expect 201, got " + response.statusCode);
+      var schema = "";
+      if (schema != '') {
+        // verify response body
+        body = (body == '' ? '[empty]' : body);
+        assert.doesNotThrow(function() {
+          JSON.parse(body);
+        }, JSON.SyntaxError, "Invalid JSON: " + body);
+        var json = JSON.parse(body);
+        var result = tv4.validateResult(json, schema);
+        assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
+        assert.ok(result.valid, "Got unexpected response body: " + (result.error && result.error.message) + " " + JSON.stringify(schema, null, 4) + " Error");
+      }
+      roleURI = response.headers['location'];
+      var splits = roleURI.split("/");
+      roleId = splits[splits.length - 1];
+      done();
+    });
+  });
+
+  step("GET /roles/{roleId} -> 200", function(done) {
+    var options = {
+      url: endpoint + '/roles/' + roleId,
+      method: 'GET',
+      qs: {},
+      body: "",
+      header: {}
+    };
+
+    request(options, function(error, response, body) {
+      assert.isNull(error);
+      assert.isNotNull(response, 'Response');
+      assert.equal(response.statusCode, 200, "Expect 200, got " + response.statusCode);
+      var schema = {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "properties": {
+          "role_url": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "required": [
+            "id",
+            "role_url",
+            "title"
+          ]
+        }
+      };
+      if (schema != '') {
+        // verify response body
+        body = (body == '' ? '[empty]' : body);
+        assert.doesNotThrow(function() {
+          JSON.parse(body);
+        }, JSON.SyntaxError, "Invalid JSON: " + body);
+        var json = JSON.parse(body);
+        var result = tv4.validateResult(json, schema);
+        assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
+        assert.ok(result.valid, "Got unexpected response body: " + (result.error && result.error.message) + " " + JSON.stringify(schema, null, 4) + " Error");
+      }
+      done();
+    });
+  });
+
+  step("GET /roles -> 200", function(done) {
+    var options = {
+      url: endpoint + '/roles',
+      method: 'GET',
+      qs: {},
+      body: '',
+      header: {}
+    };
+
+    request(options, function(error, response, body) {
+      assert.isNull(error);
+      assert.isNotNull(response, 'Response');
+      assert.equal(response.statusCode, 200, "Expect 200, got " + response.statusCode);
+      var schema = {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "totalCount": {
+          "type": "integer"
+        },
+        "roles": {
+          "type": "object",
+          "properties": {
+            "role_url": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "title": {
+              "type": "string"
+            },
+            "required": [
+              "id",
+              "role_url",
+              "title"
+            ]
+          }
+        }
+      };
+      if (schema != '') {
+        // verify response body
+        body = (body == '' ? '[empty]' : body);
+        assert.doesNotThrow(function() {
+          JSON.parse(body);
+        }, JSON.SyntaxError, "Invalid JSON: " + body);
+        var json = JSON.parse(body);
+        var result = tv4.validateResult(json, schema);
+        assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
+        assert.ok(result.valid, "Got unexpected response body: " + (result.error && result.error.message) + " " + JSON.stringify(schema, null, 4) + " Error");
+      }
+      done();
+    });
+  });
+
+  step("PUT /roles/{roleId} -> 204", function(done) {
+    var options = {
+      url: endpoint + '/roles/' + roleId,
+      method: 'PUT',
+      qs: {},
+      json: {
+        "title": "president"
+      },
+      header: {}
+    };
+
+    request(options, function(error, response, body) {
+      assert.isNull(error);
+      assert.isNotNull(response, 'Response');
+      assert.equal(response.statusCode, 204, "Expect 204, got " + response.statusCode);
+      var schema = "";
+      if (schema != '') {
+        // verify response body
+        body = (body == '' ? '[empty]' : body);
+        assert.doesNotThrow(function() {
+          JSON.parse(body);
+        }, JSON.SyntaxError, "Invalid JSON: " + body);
+        var json = JSON.parse(body);
+        var result = tv4.validateResult(json, schema);
+        assert.lengthOf(result.missing, 0, "Missing/unresolved JSON schema $refs (" + result.missing && result.missing.join(', ') + ") in schema: " + JSON.stringify(schema, null, 4) + " Error");
+        assert.ok(result.valid, "Got unexpected response body: " + (result.error && result.error.message) + " " + JSON.stringify(schema, null, 4) + " Error");
+      }
+      done();
+    });
+  });
+
+  step("DELETE /roles/{roleId} -> 204", function(done) {
+    var options = {
+      url: endpoint + '/roles/' + roleId,
+      method: 'DELETE',
+      qs: {},
+      body: "",
+      header: {}
+    };
+
+    request(options, function(error, response, body) {
+      assert.isNull(error);
+      assert.isNotNull(response, 'Response');
+      assert.equal(response.statusCode, 204, "Expect 204, got " + response.statusCode);
+      done();
+    });
+  });
 });
